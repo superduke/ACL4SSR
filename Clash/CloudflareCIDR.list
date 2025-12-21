@@ -511,6 +511,7 @@ IP-CIDR,103.81.228.0/24,no-resolve
 IP-CIDR,103.186.74.0/24,no-resolve
 IP-CIDR,103.198.92.0/24,no-resolve
 IP-CIDR,103.215.22.0/24,no-resolve
+IP-CIDR,103.219.64.0/22,no-resolve
 IP-CIDR,104.16.0.0/14,no-resolve
 IP-CIDR,104.20.0.0/18,no-resolve
 IP-CIDR,104.21.0.0/17,no-resolve
