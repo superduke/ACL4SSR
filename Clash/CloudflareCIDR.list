@@ -751,7 +751,6 @@ IP-CIDR,167.74.94.0/23,no-resolve
 IP-CIDR,167.74.130.0/24,no-resolve
 IP-CIDR,167.74.140.0/22,no-resolve
 IP-CIDR,169.40.133.0/24,no-resolve
-IP-CIDR,169.197.101.0/24,no-resolve
 IP-CIDR,170.168.7.0/24,no-resolve
 IP-CIDR,170.176.163.0/24,no-resolve
 IP-CIDR,172.64.32.0/19,no-resolve
