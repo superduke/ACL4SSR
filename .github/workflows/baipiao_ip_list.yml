@@ -32,16 +32,18 @@ jobs:
       - name: Check URL status
         id: check_url
         run: |
-          PROXYIP_URL="${{ vars.PROXYIP_URL }}"
+          RAW_URL="${{ vars.PROXYIP_URL }}"
           # 如果URL不以http://或https://开头，则添加https://
-          if [[ ! "$PROXYIP_URL" =~ ^https?:// ]]; then
-            PROXYIP_URL="https://$PROXYIP_URL"
+          if [[ ! "$RAW_URL" =~ ^https?:// ]]; then
+            NORMALIZED_URL="https://$RAW_URL"
+          else
+            NORMALIZED_URL="$RAW_URL"
           fi
-          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$PROXYIP_URL")
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$NORMALIZED_URL")
           echo "Status code: $STATUS_CODE"
           if [ "$STATUS_CODE" = "200" ]; then
             echo "url_status_ok=true" >> $GITHUB_OUTPUT
-            echo "proxyip_url=$PROXYIP_URL" >> $GITHUB_OUTPUT
+            echo "proxyip_url=$NORMALIZED_URL" >> $GITHUB_OUTPUT
             echo "URL 响应正常，状态码为 200"
           else
             echo "url_status_ok=false" >> $GITHUB_OUTPUT
