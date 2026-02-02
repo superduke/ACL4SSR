@@ -5,7 +5,7 @@ import requests
 import re  # 导入正则表达式库
 
 # 下载zip文件
-url = "https://github.com/ipverse/asn-ip/archive/refs/heads/master.zip"
+url = "https://github.com/ipverse/as-ip-blocks/archive/refs/heads/master.zip"
 r = requests.get(url)
 with open("master.zip", "wb") as code:
   code.write(r.content)
@@ -19,7 +19,7 @@ ip_addresses = []
 included_asns = ['209242', '13335', '149648', '132892', '139242', '202623', '203898', '394536']
 
 # 遍历as文件夹
-for root, dirs, files in os.walk("asn-ip-master/as"):
+for root, dirs, files in os.walk("as-ip-blocks-master/as"):
   if 'ipv4-aggregated.txt' in files:
     asn = root.split('/')[-1]
     if asn in included_asns:
@@ -42,5 +42,7 @@ with open('Clash/CloudflareCIDR.list', 'w') as clash_file, \
       clash_file.write(f"{ip}\n")
 
 # 清理下载的zip文件和解压的文件夹
-os.remove("master.zip")
-shutil.rmtree("asn-ip-master")
+if os.path.exists("master.zip"):
+  os.remove("master.zip")
+if os.path.exists("as-ip-blocks-master"):
+  shutil.rmtree("as-ip-blocks-master")
