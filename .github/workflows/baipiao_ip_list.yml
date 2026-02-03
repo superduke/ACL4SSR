@@ -32,7 +32,7 @@ jobs:
       - name: Check URL status
         id: check_url
         run: |
-          TIMEOUT_STATUS="000"
+          TIMEOUT_STATUS="ERROR"
           RAW_URL="${{ vars.PROXYIP_URL }}"
           # 如果URL不以http://或https://开头，则添加https://
           if [[ ! "$RAW_URL" =~ ^https?:// ]]; then
@@ -44,7 +44,7 @@ jobs:
           CURL_EXIT_CODE=$?
           if [ "$CURL_EXIT_CODE" -ne 0 ]; then
             STATUS_CODE="$TIMEOUT_STATUS"
-            echo "URL 检查失败 ($NORMALIZED_URL): curl exit $CURL_EXIT_CODE，状态码 $STATUS_CODE，可能是网络错误或超时" >&2
+            echo "URL 检查失败 ($NORMALIZED_URL): curl 退出码 $CURL_EXIT_CODE，状态码 $STATUS_CODE，可能是网络错误或超时" >&2
           fi
           echo "Status code: $STATUS_CODE"
           if [ "$STATUS_CODE" = "200" ]; then
