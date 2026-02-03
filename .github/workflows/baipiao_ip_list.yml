@@ -40,6 +40,9 @@ jobs:
             NORMALIZED_URL="$RAW_URL"
           fi
           STATUS_CODE=$(curl -s -m 10 -o /dev/null -w "%{http_code}" "$NORMALIZED_URL" || echo "000")
+          if [ "$STATUS_CODE" = "000" ]; then
+            echo "URL 检查失败，可能是网络错误或超时" >&2
+          fi
           echo "Status code: $STATUS_CODE"
           if [ "$STATUS_CODE" = "200" ]; then
             echo "url_status_ok=true" >> $GITHUB_OUTPUT
