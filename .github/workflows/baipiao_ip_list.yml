@@ -10,6 +10,11 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      CHECK_TIMEOUT_SECONDS: 20
+      DOWNLOAD_TIMEOUT_SECONDS: 30
+      DOWNLOAD_RETRY_COUNT: 3
+      DOWNLOAD_RETRY_DELAY: 5
     steps:
       - name: 检出代码仓库
         uses: actions/checkout@v4
@@ -32,7 +37,6 @@ jobs:
       - name: Check URL status
         id: check_url
         run: |
-          TIMEOUT_STATUS="ERROR"
           RAW_URL="${{ vars.PROXYIP_URL }}"
           # 如果URL不以http://或https://开头，则添加https://
           if [[ ! "$RAW_URL" =~ ^https?:// ]]; then
@@ -40,11 +44,17 @@ jobs:
           else
             NORMALIZED_URL="$RAW_URL"
           fi
-          STATUS_CODE=$(curl -s -m 10 -o /dev/null -w "%{http_code}" "$NORMALIZED_URL")
-          CURL_EXIT_CODE=$?
+          CURL_EXIT_CODE=0
+          STATUS_CODE=$(curl -s -m "$CHECK_TIMEOUT_SECONDS" -o /dev/null -w "%{http_code}" "$NORMALIZED_URL") || CURL_EXIT_CODE=$?
           if [ "$CURL_EXIT_CODE" -ne 0 ]; then
-            STATUS_CODE="$TIMEOUT_STATUS"
-            echo "URL 检查失败 ($NORMALIZED_URL): curl 退出码 $CURL_EXIT_CODE，状态码 $STATUS_CODE，可能是网络错误或超时" >&2
+            echo "url_status_ok=false" >> $GITHUB_OUTPUT
+            if [ "$CURL_EXIT_CODE" -eq 28 ]; then
+              echo "URL 检查失败 ($NORMALIZED_URL): curl 退出码 $CURL_EXIT_CODE (超时)" >&2
+            else
+              echo "URL 检查失败 ($NORMALIZED_URL): curl 退出码 $CURL_EXIT_CODE (网络错误)" >&2
+            fi
+            echo "已将 URL 状态标记为不可用，后续步骤将跳过。"
+            exit 0
           fi
           echo "Status code: $STATUS_CODE"
           if [ "$STATUS_CODE" = "200" ]; then
@@ -59,7 +69,7 @@ jobs:
       - name: Download
         if: steps.check_url.outputs.url_status_ok == 'true'
         run: |
-          curl -L --max-time 30 --retry 3 --retry-delay 5 "${{ steps.check_url.outputs.proxyip_url }}" -o baipiao.txt
+          curl -L --max-time "$DOWNLOAD_TIMEOUT_SECONDS" --retry "$DOWNLOAD_RETRY_COUNT" --retry-delay "$DOWNLOAD_RETRY_DELAY" "${{ steps.check_url.outputs.proxyip_url }}" -o baipiao.txt
 
       - name: 提交更新的IP库文件
         if: steps.check_url.outputs.url_status_ok == 'true'
