@@ -45,8 +45,6 @@ with open('Clash/CloudflareCIDR.list', 'w') as clash_file, \
 if os.path.exists("master.zip"):
   os.remove("master.zip")
 # 清理新的目录名
-if os.path.exists("as-ip-blocks-master"):
-  shutil.rmtree("as-ip-blocks-master", ignore_errors=True)
+shutil.rmtree("as-ip-blocks-master", ignore_errors=True)
 # 清理旧的目录名（用于迁移）
-if os.path.exists("asn-ip-master"):
-  shutil.rmtree("asn-ip-master", ignore_errors=True)
+shutil.rmtree("asn-ip-master", ignore_errors=True)
