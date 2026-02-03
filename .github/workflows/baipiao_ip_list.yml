@@ -45,8 +45,6 @@ jobs:
           if [ "$CURL_EXIT_CODE" -ne 0 ]; then
             STATUS_CODE="$TIMEOUT_STATUS"
             echo "URL 检查失败 ($NORMALIZED_URL): curl exit $CURL_EXIT_CODE，状态码 $STATUS_CODE，可能是网络错误或超时" >&2
-          elif [ "$STATUS_CODE" = "$TIMEOUT_STATUS" ]; then
-            echo "URL 检查失败 ($NORMALIZED_URL): 状态码 $STATUS_CODE，可能是网络错误或超时" >&2
           fi
           echo "Status code: $STATUS_CODE"
           if [ "$STATUS_CODE" = "200" ]; then
