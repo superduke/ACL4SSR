@@ -2,7 +2,7 @@ name: 更新白嫖IP库
 on:
   workflow_dispatch:
   schedule:
-    - cron: '30 21 * * *'  # 每天的8点、16点执行（UTC时间）
+    - cron: '30 21 * * *'  # 每天 21:30 UTC
 
 permissions:
   contents: write
@@ -10,61 +10,22 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PROXYIP_URL: ${{ vars.PROXYIP_URL }}
     steps:
       - name: 检出代码仓库
         uses: actions/checkout@v4
 
-      - name: Check PROXYIP_URL variable
+      - name: 检查 IP 列表源地址
         run: |
-          # 检查是否设置了PROXYIP_URL变量
-          PROXYIP_URL="${{ vars.PROXYIP_URL }}"
           if [ -z "$PROXYIP_URL" ]; then
-            echo "❌ 错误: 未设置 PROXYIP_URL 变量"
-            echo "请在仓库设置中添加 PROXYIP_URL 变量："
-            echo "1. 进入仓库 Settings > Secrets and variables > Actions"
-            echo "2. 在 Variables 标签页中添加新变量"
-            echo "3. Name: PROXYIP_URL"
-            echo "4. Value: 配置文件的URL地址"
+            echo '请在仓库 Actions Variables 中配置 PROXYIP_URL，值必须是返回 IP 列表的完整 http(s) URL。'
             exit 1
           fi
-          echo "✅ PROXYIP_URL 变量已设置: $PROXYIP_URL"
+          python -c 'import os; from scripts.update_list import validate_url; validate_url(os.environ["PROXYIP_URL"])'
 
-      - name: Check URL status
-        id: check_url
-        run: |
-          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$PROXYIP_URL")
-          echo "Status code: $STATUS_CODE"
-          if [ "$STATUS_CODE" = "200" ]; then
-            echo "url_status_ok=true" >> $GITHUB_OUTPUT
-            echo "URL 响应正常，状态码为 200"
-          else
-            echo "url_status_ok=false" >> $GITHUB_OUTPUT
-            echo "URL 响应异常，状态码为 $STATUS_CODE，将跳过后续步骤"
-          fi
+      - name: 下载并验证 IP 列表
+        run: python scripts/update_list.py baipiao "$PROXYIP_URL" baipiao.txt
 
-      - name: Download
-        if: steps.check_url.outputs.url_status_ok == 'true'
-        run: |
-          curl -L "$PROXYIP_URL" -o baipiao.txt
-
-      - name: 提交更新的IP库文件
-        if: steps.check_url.outputs.url_status_ok == 'true'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          
-          # 检查文件是否有变化
-          if [ ! -f baipiao.txt ] || [ ! -s baipiao.txt ]; then
-            echo "baipiao.txt 文件不存在或为空，跳过提交"
-            exit 0
-          fi
-          
-          if git diff --quiet baipiao.txt 2>/dev/null; then
-            echo "baipiao.txt 文件没有变化，跳过提交"
-          else
-            echo "检测到 baipiao.txt 文件有变化，开始提交"
-            git add baipiao.txt
-            git commit -m "更新IP库文件 $(date '+%Y-%m-%d %H:%M:%S')"
-            git push
-            echo "提交完成"
-          fi
+      - name: 提交更新的 IP 库文件
+        run: bash scripts/commit-list-updates.sh "更新IP库文件 $(date '+%Y-%m-%d %H:%M:%S')" baipiao.txt
